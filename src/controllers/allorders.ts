@@ -8,12 +8,32 @@ import workerId from "../libs/worker";
 dotenv.config();
 
 const db = orm.Connector;
+const { ordersTable } = orm.Tables;
 
 const allOrders: RequestHandler = async (req, res) => {
   const { page } = req.body;
   const limit = +(process.env.LIMIT as string);
   const offset = limit * (+page - 1);
+
+  const stat: any[] = [];
+
   try {
+    // timestamp for count query
+    const countTS = new Date().toISOString().slice(0, 19).replace("T", " ");
+    // count query
+    const countStart = Date.now();
+    const count = await db.execute(
+      sql`select count(${ordersTable.orderID}) from ${ordersTable}`,
+    );
+
+    const countInfo = {
+      queryString: `select count(1) from orders`,
+      queryTS: countTS,
+      queryExecutionTime: `${Date.now() - countStart}ms`,
+    };
+
+    stat.push(countInfo);
+
     const queryString = `
       SELECT 
       Ord."OrderID", 
@@ -52,22 +72,23 @@ const allOrders: RequestHandler = async (req, res) => {
         LIMIT ${limit} OFFSET ${offset}
       `,
     );
-    // timer end
-    const endQueryTime = Date.now();
-    // execution time
-    const queryExecutionTime = `${endQueryTime - startQueryTime}ms`;
+
+    const queryInfo = {
+      queryString,
+      queryTS,
+      queryExecutionTime: `${Date.now() - startQueryTime}ms`,
+    };
+    stat.push(queryInfo);
+
     if (!query.rows.length) {
       return res.status(404).json({ message: "Not found." });
     }
     // response object
     const response = {
       data: query.rows,
-      queryInfo: {
-        queryString,
-        queryTS,
-        queryExecutionTime,
-        workerId,
-      },
+      count: +count.rows[0].count,
+      queryInfo: stat,
+      workerId,
     };
     res.json(response);
   } catch (error) {

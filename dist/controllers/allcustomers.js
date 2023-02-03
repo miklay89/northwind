@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv_1 = __importDefault(require("dotenv"));
+const drizzle_orm_1 = require("drizzle-orm");
 const db_1 = __importDefault(require("../libs/db"));
 const worker_1 = __importDefault(require("../libs/worker"));
 dotenv_1.default.config();
@@ -13,27 +14,35 @@ const allCustomers = async (req, res) => {
     const { page } = req.body;
     const limit = +process.env.LIMIT;
     const offset = limit * (+page - 1);
+    const stat = [];
     try {
+        const countTS = new Date().toISOString().slice(0, 19).replace("T", " ");
+        const countStart = Date.now();
+        const count = await db.execute((0, drizzle_orm_1.sql) `select count(${customersTable.customerID}) from ${customersTable}`);
+        const countInfo = {
+            queryString: `select count(1) from customers`,
+            queryTS: countTS,
+            queryExecutionTime: `${Date.now() - countStart}ms`,
+        };
+        stat.push(countInfo);
         const queryTS = new Date().toISOString().slice(0, 19).replace("T", " ");
         const startQueryTime = Date.now();
         const query = await db.select(customersTable).limit(limit).offset(offset);
-        const endQueryTime = Date.now();
-        const queryExecutionTime = `${endQueryTime - startQueryTime}ms`;
+        const queryInfo = {
+            queryString: db.select(customersTable).limit(limit).offset(offset).toSQL()
+                .sql,
+            queryTS,
+            queryExecutionTime: `${Date.now() - startQueryTime}ms`,
+        };
+        stat.push(queryInfo);
         if (!query.length) {
             return res.status(404).json({ message: "Not found." });
         }
         const response = {
             data: query,
-            queryInfo: {
-                queryString: db
-                    .select(customersTable)
-                    .limit(limit)
-                    .offset(offset)
-                    .toSQL().sql,
-                queryTS,
-                queryExecutionTime,
-                workerId: worker_1.default,
-            },
+            count: +count.rows[0].count,
+            queryInfo: stat,
+            workerId: worker_1.default,
         };
         res.json(response);
     }

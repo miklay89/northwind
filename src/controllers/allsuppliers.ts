@@ -1,5 +1,6 @@
 import { RequestHandler } from "express";
 import dotenv from "dotenv";
+import { sql } from "drizzle-orm";
 import orm from "../libs/db";
 import workerId from "../libs/worker";
 
@@ -14,32 +15,48 @@ const allSuppliers: RequestHandler = async (req, res) => {
   const limit = +(process.env.LIMIT as string);
   const offset = limit * (+page - 1);
 
+  const stat: any[] = [];
+
   try {
+    // timestamp for count query
+    const countTS = new Date().toISOString().slice(0, 19).replace("T", " ");
+    // count query
+    const countStart = Date.now();
+    const count = await db.execute(
+      sql`select count(${suppliersTable.supplierID}) from ${suppliersTable}`,
+    );
+
+    const countInfo = {
+      queryString: `select count(1) from suppliers`,
+      queryTS: countTS,
+      queryExecutionTime: `${Date.now() - countStart}ms`,
+    };
+
+    stat.push(countInfo);
+
     // timestamp for query
     const queryTS = new Date().toISOString().slice(0, 19).replace("T", " ");
     // timer start
     const startQueryTime = Date.now();
     const query = await db.select(suppliersTable).limit(limit).offset(offset);
-    // timer end
-    const endQueryTime = Date.now();
-    // execution time
-    const queryExecutionTime = `${endQueryTime - startQueryTime}ms`;
+
+    const queryInfo = {
+      queryString: db.select(suppliersTable).limit(limit).offset(offset).toSQL()
+        .sql,
+      queryTS,
+      queryExecutionTime: `${Date.now() - startQueryTime}ms`,
+    };
+    stat.push(queryInfo);
+
     if (!query.length) {
       return res.status(404).json({ message: "Not found." });
     }
     // response object
     const response = {
       data: query,
-      queryInfo: {
-        queryString: db
-          .select(suppliersTable)
-          .limit(limit)
-          .offset(offset)
-          .toSQL().sql,
-        queryTS,
-        queryExecutionTime,
-        workerId,
-      },
+      count: +count.rows[0].count,
+      queryInfo: stat,
+      workerId,
     };
     res.json(response);
   } catch (error) {
