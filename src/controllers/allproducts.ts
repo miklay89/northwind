@@ -10,7 +10,7 @@ const db = orm.Connector;
 const { productsTable } = orm.Tables;
 // select all products
 const allProducts: RequestHandler = async (req, res) => {
-  const { page } = req.body;
+  const page = req.query.page as string;
   const limit = +(process.env.LIMIT as string);
   const offset = limit * (+page - 1);
 

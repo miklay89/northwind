@@ -11,7 +11,7 @@ const db = orm.Connector;
 const { ordersTable } = orm.Tables;
 
 const allOrders: RequestHandler = async (req, res) => {
-  const { page } = req.body;
+  const page = req.query.page as string;
   const limit = +(process.env.LIMIT as string);
   const offset = limit * (+page - 1);
 

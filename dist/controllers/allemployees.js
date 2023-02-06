@@ -11,7 +11,7 @@ dotenv_1.default.config();
 const db = db_1.default.Connector;
 const { employeesTable } = db_1.default.Tables;
 const allEmployees = async (req, res) => {
-    const { page } = req.body;
+    const page = req.query.page;
     const limit = +process.env.LIMIT;
     const offset = limit * (+page - 1);
     const stat = [];

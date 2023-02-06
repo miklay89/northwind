@@ -11,7 +11,7 @@ const { suppliersTable } = orm.Tables;
 
 // select all suppliers
 const allSuppliers: RequestHandler = async (req, res) => {
-  const { page } = req.body;
+  const page = req.query.page as string;
   const limit = +(process.env.LIMIT as string);
   const offset = limit * (+page - 1);
 
