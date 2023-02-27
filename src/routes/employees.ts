@@ -1,10 +1,9 @@
 import Router from "express";
-import allEmployees from "../controllers/allemployees";
-import singleEmployee from "../controllers/employeebyid";
+import EmployeesController from "../controllers/employees";
 
 const router = Router();
 
-router.get("/employees", allEmployees);
-router.get("/employees/:id", singleEmployee);
+router.get("/employees", EmployeesController.getEmployees);
+router.get("/employees/:id", EmployeesController.getEmployeeByID);
 
 export default router;

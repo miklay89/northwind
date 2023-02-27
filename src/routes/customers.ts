@@ -1,10 +1,9 @@
 import Router from "express";
-import allCustomers from "../controllers/allcustomers";
-import singleCustomer from "../controllers/customerbyid";
+import CustomersController from "../controllers/customers";
 
 const router = Router();
 
-router.get("/customers", allCustomers);
-router.get("/customers/:id", singleCustomer);
+router.get("/customers", CustomersController.getCustomers);
+router.get("/customers/:id", CustomersController.getCustomerByID);
 
 export default router;

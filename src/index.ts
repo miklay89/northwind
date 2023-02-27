@@ -7,11 +7,9 @@ import ordersRoutes from "./routes/orders";
 import productsRoutes from "./routes/products";
 import searchRoutes from "./routes/search";
 import suppliersRoutes from "./routes/suppliers";
+import errorHandler from "./utils/error_handler";
 
 dotenv.config();
-
-const PORT = (process.env.PORT as string) || 5000;
-// const databaseURI = process.env.MONGO_DB_URI as string;
 
 const app = express();
 
@@ -19,7 +17,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cors());
 
-// routes
 app.use("/", customersRoutes);
 app.use("/", employeesRoutes);
 app.use("/", ordersRoutes);
@@ -27,6 +24,8 @@ app.use("/", productsRoutes);
 app.use("/", searchRoutes);
 app.use("/", suppliersRoutes);
 
+app.use(errorHandler);
+
 app.listen(process.env.PORT, () => {
-  console.log(`Server has been started on port ${PORT}...`);
+  console.log(`Server has been started on port ${process.env.PORT || 5000}...`);
 });

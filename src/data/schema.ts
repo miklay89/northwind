@@ -4,8 +4,10 @@ import {
   index,
   integer,
   boolean,
-  numeric,
-} from "drizzle-orm-pg";
+  decimal,
+  smallint,
+  InferModel,
+} from "drizzle-orm/pg-core";
 
 export const categoriesTable = pgTable("categories", {
   categoryID: integer("CategoryID").notNull().primaryKey(),
@@ -80,7 +82,7 @@ export const suppliersTable = pgTable("suppliers", {
   country: text("Country"),
   phone: text("Phone"),
   fax: text("Fax"),
-  HomePage: text("HomePage"),
+  homePage: text("HomePage"),
 });
 
 export const productsTable = pgTable("products", {
@@ -91,10 +93,10 @@ export const productsTable = pgTable("products", {
     () => categoriesTable.categoryID,
   ),
   quantityPerUnit: text("QuantityPerUnit"),
-  unitPrice: text("UnitPrice"),
-  unitsInStock: text("UnitsInStock"),
-  unitsOnOrder: text("UnitsOnOrder"),
-  reorderLevel: text("ReorderLevel"),
+  unitPrice: decimal("UnitPrice"),
+  unitsInStock: smallint("UnitsInStock"),
+  unitsOnOrder: smallint("UnitsOnOrder"),
+  reorderLevel: smallint("ReorderLevel"),
   discontinued: boolean("Discontinued").notNull(),
 });
 
@@ -118,7 +120,7 @@ export const ordersTable = pgTable("orders", {
   shipVia: integer("ShipVia")
     .notNull()
     .references(() => shippersTable.shipperID),
-  freight: text("Freight"),
+  freight: decimal("Freight"),
   shipName: text("ShipName"),
   shipAddress: text("ShipAddress"),
   shipCity: text("ShipCity"),
@@ -136,9 +138,9 @@ export const orderDetailsTable = pgTable(
     productID: integer("ProductID")
       .notNull()
       .references(() => productsTable.productID),
-    unitPrice: numeric("UnitPrice").notNull(),
-    quantity: numeric("Quantity").notNull(),
-    discount: numeric("Discount").notNull(),
+    unitPrice: decimal("UnitPrice").notNull(),
+    quantity: integer("Quantity").notNull(),
+    discount: decimal("Discount").notNull(),
   },
   (table) => ({
     uniqIdx: index("orderID_and_productID_index").on(
@@ -147,3 +149,9 @@ export const orderDetailsTable = pgTable(
     ),
   }),
 );
+
+export type Supplier = InferModel<typeof suppliersTable>;
+export type Product = InferModel<typeof productsTable>;
+export type Order = InferModel<typeof ordersTable>;
+export type Employee = InferModel<typeof employeesTable>;
+export type Customer = InferModel<typeof customersTable>;

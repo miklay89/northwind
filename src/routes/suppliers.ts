@@ -1,10 +1,9 @@
 import Router from "express";
-import allSuppliers from "../controllers/allsuppliers";
-import singleSupplier from "../controllers/supplierbyid";
+import SuppliersController from "../controllers/suppliers";
 
 const router = Router();
 
-router.get("/suppliers", allSuppliers);
-router.get("/suppliers/:id", singleSupplier);
+router.get("/suppliers", SuppliersController.getSuppliers);
+router.get("/suppliers/:id", SuppliersController.getSupplierByID);
 
 export default router;
